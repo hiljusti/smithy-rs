@@ -56,8 +56,8 @@ class AwsServices(private val project: Project, services: List<AwsService>) {
  * Since this function parses all models, it is relatively expensive to call. The result should be cached in a property
  * during build.
  */
-fun Project.discoverServices(serviceMembership: Membership): AwsServices {
-    val models = project.file("aws-models")
+fun Project.discoverServices(awsModelsPath: String?, serviceMembership: Membership): AwsServices {
+    val models = awsModelsPath ?: project.file("aws-models")
     val baseServices = fileTree(models)
         .sortedBy { file -> file.name }
         .mapNotNull { file ->
