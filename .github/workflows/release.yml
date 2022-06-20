@@ -1,0 +1,77 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# This workflow performs a release of smithy-rs. It is manually
+# kicked off via GitHub Actions workflow dispatch.
+
+# Allow only one release to run at a time
+concurrency:
+  group: release-smithy-rs
+  cancel-in-progress: true
+
+name: Release smithy-rs
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Dry runs will only produce release artifacts, but will not cut a release tag in GitHub nor publish to crates.io
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  # TODO: Remove this before merge to main; won't be needed
+  acquire-base-image:
+    name: Acquire Base Image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        path: smithy-rs
+        fetch-depth: 0
+    - name: Acquire base image
+      id: acquire
+      run: ./smithy-rs/tools/ci-build/acquire-build-image
+    - name: Upload base image
+      uses: actions/upload-artifact@v3
+      with:
+        name: smithy-rs-base-image
+        path: smithy-rs-base-image
+        retention-days: 1
+
+  # TODO: Re-enable this once the rest is working
+  #release-ci:
+  #  name: Prerelease checks
+  #  uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Release
+    needs:
+    # TODO: Remove this before merge to main; won't be needed
+    - acquire-base-image
+    # TODO: Re-enable this once the rest is working
+    #- release-ci
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        path: smithy-rs
+    - name: Generate release artifacts
+      uses: ./smithy-rs/.github/actions/docker-build
+      with:
+        action: generate-smithy-rs-release
+    - name: Push smithy-rs changes
+      if: ${{ !inputs.dry_run }}
+      shell: bash
+      run: |
+        echo "TODO: Push to GitHub"
+    - name: Tag release
+      if: ${{ !inputs.dry_run }}
+      shell: bash
+      run: |
+        echo "TODO: Implement release tagging"
+    - name: Publish to crates.io
+      if: ${{ !inputs.dry_run }}
+      shell: bash
+      run: |
+        echo "TODO: Implement publish"
